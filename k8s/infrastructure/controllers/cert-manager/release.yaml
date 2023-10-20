@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/part-of: cert-manager
 spec:
-  releaseName: cert-manager
+  # releaseName: cert-manager
   interval: 30m
   install:
     crds: CreateReplace
