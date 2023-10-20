@@ -3,12 +3,12 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: istio-base
-  namespace: istio-system
+  namespace: flux-system
   labels:
     app.kubernetes.io/part-of: istio
 spec:
   releaseName: istio-base
-  # targetNamespace: kube-system
+  targetNamespace: istio-system
   interval: 30m
   install:
     crds: CreateReplace
@@ -20,76 +20,77 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: istio
-        namespace: istio-system
+        namespace: flux-system
       interval: 12h
-# ---
-# apiVersion: helm.toolkit.fluxcd.io/v2beta1
-# kind: HelmRelease
-# metadata:
-#   name: istiod
-#   namespace: istio-system
-#   labels:
-#     app.kubernetes.io/part-of: istio
-# spec:
-#   interval: 30m
-#   dependsOn:
-#     - name: istio-base
-#       namespace: istio-system
-#   chart:
-#     spec:
-#       chart: istiod
-#       sourceRef:
-#         kind: HelmRepository
-#         name: istio
-#       interval: 12h
-#   values:
-#     pilot:
-#       autoscaleMin: 2
-#   # releaseName: istiod
-#   targetNamespace: istio-system
-# ---
-# apiVersion: helm.toolkit.fluxcd.io/v2beta1
-# kind: HelmRelease
-# metadata:
-#   name: istio-ingressgateway
-#   namespace: istio-system
-#   labels:
-#     app.kubernetes.io/part-of: istio
-# spec:
-#   releaseName: istio-ingressgateway
-#   interval: 30m0s
-#   targetNamespace: istio-ingress
-#   dependsOn:
-#     - name: istio-base
-#       namespace: istio-system
-#     - name: istiod
-#       namespace: istio-system
-#   chart:
-#     spec:
-#       chart: gateway
-#       sourceRef:
-#         kind: HelmRepository
-#         name: istio
-#         namespace: istio-system
-#       interval: 12h
-#   values:
-#     service:
-#       type: NodePort
-#       ports:
-#       - name: status-port
-#         appProtocol: http
-#         port: 15021
-#         protocol: TCP
-#         targetPort: 15021
-#       - name: http2
-#         appProtocol: http2
-#         port: 80
-#         protocol: TCP
-#         targetPort: 80
-#       - name: https
-#         appProtocol: https
-#         port: 443
-#         protocol: TCP
-#         targetPort: 443
-#     autoscaling:
-#       minReplicas: 2
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  releaseName: istiod
+  targetNamespace: istio-system
+  interval: 30m
+  dependsOn:
+    - name: istio-base
+      namespace: flux-system
+  chart:
+    spec:
+      chart: istiod
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 12h
+  values:
+    pilot:
+      autoscaleMin: 2
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-ingressgateway
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  releaseName: istio-ingressgateway
+  targetNamespace: istio-ingress
+  interval: 30m
+  dependsOn:
+    - name: istio-base
+      namespace: flux-system
+    - name: istiod
+      namespace: flux-system
+  chart:
+    spec:
+      chart: gateway
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 12h
+  values:
+    service:
+      type: NodePort
+      ports:
+      - name: status-port
+        appProtocol: http
+        port: 15021
+        protocol: TCP
+        targetPort: 15021
+      - name: http2
+        appProtocol: http2
+        port: 80
+        protocol: TCP
+        targetPort: 80
+      - name: https
+        appProtocol: https
+        port: 443
+        protocol: TCP
+        targetPort: 443
+    autoscaling:
+      minReplicas: 2

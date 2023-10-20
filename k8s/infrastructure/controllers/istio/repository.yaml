@@ -3,7 +3,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: istio
-  namespace: istio-system
+  namespace: flux-system
   labels:
     app.kubernetes.io/part-of: istio
 spec:
