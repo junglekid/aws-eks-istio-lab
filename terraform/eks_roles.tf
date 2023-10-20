@@ -25,7 +25,7 @@ module "external_dns_irsa_role" {
   oidc_providers = {
     ex = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:${local.eks_external_dns_service_account_name}"]
+      namespace_service_accounts = ["kube-system:external-dns"]
     }
   }
 }
