@@ -17,7 +17,7 @@ spec:
       chart: cert-manager
       sourceRef:
         kind: HelmRepository
-        name: jetpack
+        name: jetstack
   values:
     installCRDs: true
     serviceAccount:
