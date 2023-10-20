@@ -23,4 +23,4 @@ spec:
     serviceAccount:
       create: true
       annotations:
-         eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-cert-manager
+         eks.amazonaws.com/role-arn: SA_AWS_CERT_MANAGER_IAM_ROLE_ARN

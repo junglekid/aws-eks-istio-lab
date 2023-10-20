@@ -20,6 +20,11 @@ locals {
   eks_cluster_name                            = "eks-istio-lab"
   eks_cluster_version                         = "1.28"
   eks_iam_role_prefix                         = "eks-istio-lab"
+  eks_alb_service_account_name                = "sa-aws-load-balancer-controller"
+  eks_external_dns_service_account_name       = "sa-external-dns"
+  eks_cluster_autoscaler_service_account_name = "sa-cluster-autoscaler"
+  eks_sqs_service_account_name                = "sa-aws-sqs"
+  eks_cert_manager_service_account_name       = "sa-cert-manager"
 
   # ACM and Route53 Configuration
   public_base_domain_name = "dallin.brewsentry.com" # Update with your root domain

@@ -22,12 +22,12 @@ spec:
     crds: CreateReplace
   values:
     autoDiscovery:
-      clusterName: eks-istio-lab
-    awsRegion: us-west-2
+      clusterName: EKS_CLUSTER_NAME
+    awsRegion: AWS_REGION
     cloudProvider: aws
     rbac:
       serviceAccount:
         create: true
         annotations:
-          eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-cluster-autoscaler
+          eks.amazonaws.com/role-arn: SA_CLUSTER_AUTOSCALER_IAM_ROLE_ARN
     replicaCount: 2

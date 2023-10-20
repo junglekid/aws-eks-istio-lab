@@ -2,19 +2,19 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: aws-load-balancer-controller
+  name: external-dns
   namespace: flux-system
 spec:
-  releaseName: aws-load-balancer-controller
+  releaseName: external-dns
   targetNamespace: kube-system
   interval: 30m
   chart:
     spec:
-      chart: aws-load-balancer-controller
+      chart: external-dns
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: eks-charts
+        name: external-dns
         namespace: flux-system
   install:
     crds: CreateReplace
@@ -24,6 +24,8 @@ spec:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-aws-load-balancer-controller
-    region: us-west-2
-    clusterName: eks-istio-lab
+        eks.amazonaws.com/role-arn: SA_EXTERNAL_DNS_IAM_ROLE_ARN
+    region: AWS_REGION
+    clusterName: EKS_CLUSTER_NAME
+    domainFilters: ["EXTERNAL_DNS_DOMAIN_FILTER"]
+    policy: sync

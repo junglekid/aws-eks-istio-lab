@@ -24,6 +24,6 @@ spec:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-aws-load-balancer-controller
-    region: us-west-2
-    clusterName: eks-istio-lab
+        eks.amazonaws.com/role-arn: SA_ALB_IAM_ROLE_ARN
+    region: AWS_REGION
+    clusterName: EKS_CLUSTER_NAME

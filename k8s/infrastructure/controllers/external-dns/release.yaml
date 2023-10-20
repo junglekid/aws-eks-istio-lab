@@ -24,8 +24,8 @@ spec:
     serviceAccount:
       create: true
       annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/
+        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-external-dns
     region: us-west-2
-    clusterName: eks-fluxcd-lab
+    clusterName: eks-istio-lab
     domainFilters: ["dallin.brewsentry.com"]
     policy: sync
