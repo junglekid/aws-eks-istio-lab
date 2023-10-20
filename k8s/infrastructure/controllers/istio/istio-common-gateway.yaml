@@ -1,0 +1,27 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: common-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 443
+        name: https-443
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: "common-gateway-tls"
+      hosts:
+        - "*"
+    - port:
+        number: 80
+        name: http-80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+      hosts:
+        - "*"

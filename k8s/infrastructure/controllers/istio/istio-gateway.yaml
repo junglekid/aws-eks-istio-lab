@@ -1,0 +1,33 @@
+service:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:704855531002:certificate/aae37b55-e3ed-4c15-88f4-89b94a426a03, arn:aws:acm:us-west-2:704855531002:certificate/796982ad-37f1-45c7-ad3e-4f7565dbb228, arn:aws:acm:us-west-2:704855531002:certificate/005ac9c4-7519-46c3-83e1-131829348755"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "ssl"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: "ELBSecurityPolicy-TLS13-1-2-2021-06"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/healthz/ready"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "15021"
+    external-dns.alpha.kubernetes.io/hostname: "podinfo.dallin.brewsentry.com, react-app.dallin.brewsentry.com, weave-gitops.dallin.brewsentry.com"
+    external-dns.alpha.kubernetes.io/ttl: "60"
+  ports:
+  - name: status-port
+    appProtocol: http
+    port: 15021
+    protocol: TCP
+    targetPort: 15021
+  - name: http2
+    appProtocol: http2
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    appProtocol: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+autoscaling:
+  minReplicas: 2
