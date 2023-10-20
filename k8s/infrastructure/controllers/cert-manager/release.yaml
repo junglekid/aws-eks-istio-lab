@@ -3,10 +3,12 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: cert-manager
+  namespace: flux-system
   labels:
     app.kubernetes.io/part-of: cert-manager
 spec:
-  # releaseName: cert-manager
+  releaseName: cert-manager
+  targetNamespace: cert-manager
   interval: 30m
   install:
     crds: CreateReplace
@@ -18,6 +20,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: jetstack
+        namespace: flux-system
   values:
     installCRDs: true
     serviceAccount:
