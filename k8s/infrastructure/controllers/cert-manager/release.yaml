@@ -15,7 +15,7 @@ spec:
     crds: CreateReplace
   chart:
     spec:
-      chart: base
+      chart: cert-manager
       sourceRef:
         kind: HelmRepository
         name: jetpack
