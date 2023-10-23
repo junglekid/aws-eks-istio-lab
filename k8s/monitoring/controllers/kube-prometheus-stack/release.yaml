@@ -22,6 +22,7 @@ spec:
     crds: CreateReplace
   valuesFrom:
   - kind: ConfigMap
+    namespace: monitoring
     name: flux-kube-state-metrics-config
     valuesKey: kube-state-metrics-config.yaml
   # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
