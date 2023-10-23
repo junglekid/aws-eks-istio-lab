@@ -1,6 +1,5 @@
 nameReference:
 - kind: ConfigMap
-  namespace: monitoring
   version: v1
   fieldSpecs:
   - path: spec/valuesFrom/name
