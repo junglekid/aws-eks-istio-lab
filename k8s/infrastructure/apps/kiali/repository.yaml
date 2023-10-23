@@ -1,0 +1,9 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: kiali
+  namespace: kiali-operator
+spec:
+  interval: 30m
+  url: https://kiali.org/helm-charts

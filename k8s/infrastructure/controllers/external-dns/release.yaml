@@ -28,4 +28,4 @@ spec:
     region: us-west-2
     clusterName: eks-istio-lab
     domainFilters: ["dallin.brewsentry.com"]
-    policy: upsert-only
+    policy: sync
