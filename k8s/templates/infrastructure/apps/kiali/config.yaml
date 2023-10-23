@@ -29,7 +29,7 @@ spec:
       paths:
       - backend:
           service:
-            name: istio-gateway
+            name: istio-ingressgateway
             port:
               number: 443
         path: /*

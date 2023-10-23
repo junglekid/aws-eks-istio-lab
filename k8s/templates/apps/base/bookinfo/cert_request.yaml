@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  secretName: bookinfo-tls
+  privateKey:
+    rotationPolicy: Always
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  commonName: "bookinfo.BASE_DOMAIN_NAME"
+  dnsNames:
+    - "bookinfo.BASE_DOMAIN_NAME"
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer

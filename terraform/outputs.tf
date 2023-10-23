@@ -46,35 +46,25 @@ output "route53_zone_id" {
   value = local.route53_zone_id
 }
 
+# Podinfo
+output "podinfo_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.podinfo.certificate_arn
+}
 
-# # Podinfo Outputs
-# output "podinfo_domain_name" {
-#   value = local.podinfo_domain_name
-# }
+## Grafana
+output "grafana_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.grafana.certificate_arn
+}
 
-# output "podinfo_acm_certificate_arn" {
-#   value = aws_acm_certificate_validation.podinfo.certificate_arn
-# }
+## Kiali
+output "kiali_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.kiali.certificate_arn
+}
 
-# output "grafana_acm_certificate_arn" {
-#   value = aws_acm_certificate_validation.grafana.certificate_arn
-# }
-
-# output "kiali_domain_name" {
-#   value = local.kiali_domain_name
-# }
-
-# output "kiali_acm_certificate_arn" {
-#   value = aws_acm_certificate_validation.kiali.certificate_arn
-# }
-
-# output "bookinfo_domain_name" {
-#   value = local.bookinfo_domain_name
-# }
-
-# output "bookinfo_acm_certificate_arn" {
-#   value = aws_acm_certificate_validation.bookinfo.certificate_arn
-# }
+## Bookinfo
+output "bookinfo_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.bookinfo.certificate_arn
+}
 
 # output "route53_zone_arn" {
 #   value = local.route53_zone_arn
