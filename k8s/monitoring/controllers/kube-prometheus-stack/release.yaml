@@ -4,6 +4,8 @@ metadata:
   name: kube-prometheus-stack
   namespace: flux-system
 spec:
+  releaseName: kube-prometheus-stack
+  targetNamespace: monitoring
   interval: 1h
   chart:
     spec:
