@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - letsencrypt.yaml
   - wildcard_cert.yaml
+  - ebs-sc.yaml
+  - istio-common-gateway.yaml
