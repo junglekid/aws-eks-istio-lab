@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - release.yaml
+  - cert_request.yaml
   - config.yaml
