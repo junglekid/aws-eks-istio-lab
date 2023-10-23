@@ -14,7 +14,8 @@ spec:
       version: ">=6.5.0"
       sourceRef:
         kind: HelmRepository
-        name: flux-system
+        name: podinfo
+        namespace: flux-system
   values:
     resources:
       requests:
