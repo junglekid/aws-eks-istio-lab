@@ -28,4 +28,4 @@ spec:
     region: AWS_REGION
     clusterName: EKS_CLUSTER_NAME
     domainFilters: ["EXTERNAL_DNS_DOMAIN_FILTER"]
-    policy: sync
+    policy: upsert-only

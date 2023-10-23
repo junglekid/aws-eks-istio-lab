@@ -45,7 +45,7 @@ spec:
               username: "kiali"
             enabled: true
             in_cluster_url: 'http://kube-prometheus-stack-grafana.monitoring'
-            url: 'https://grafana.dallin.brewsentry.com'
+            url: 'https://grafana.BASE_DOMAIN_NAME'
             dashboards:
             - name: "Istio Service Dashboard"
             - name: "Istio Workload Dashboard"
