@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: jaeger-operator
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: jaeger-operator
+spec:
+  releaseName: jaeger-operator
+  targetNamespace: observability
+  interval: 30m
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  chart:
+    spec:
+      chart: jaeger-operator
+      sourceRef:
+        kind: HelmRepository
+        name: jaegertracing
+        namespace: flux-system
+  # values:
+  #   installCRDs: true
+  #   serviceAccount:
+  #     create: true
+  #     annotations:
+  #        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-cert-manager
