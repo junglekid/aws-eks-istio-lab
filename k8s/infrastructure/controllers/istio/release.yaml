@@ -51,7 +51,7 @@ spec:
       traceSampling: 25
     global:
       proxy:
-        tracer:
+        tracer: zipkin
           zipkin:
             address: jaeger-collector.observability.svc.cluster.local:9411
 ---
