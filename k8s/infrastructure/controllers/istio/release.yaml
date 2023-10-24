@@ -52,8 +52,9 @@ spec:
     global:
       proxy:
         tracer: zipkin
-          zipkin:
-            address: jaeger-collector.observability.svc.cluster.local:9411
+      tracer:
+        zipkin:
+          address: jaeger-collector.observability.svc.cluster.local:9411
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
