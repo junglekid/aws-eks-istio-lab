@@ -64,7 +64,7 @@ spec:
         external_services:
           prometheus:
             # Prometheus service name is "metrics" and is in the "telemetry" namespace
-            url: "http://kube-prometheus-stack-prometheus.monitoring:9090"
+            url: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
           grafana:
             auth:
               # ca_file: ""
@@ -75,7 +75,7 @@ spec:
               # use_kiali_token: false
               username: "kiali"
             enabled: true
-            in_cluster_url: 'http://kube-prometheus-stack-grafana.monitoring'
+            in_cluster_url: 'http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local'
             url: 'https://grafana.dallin.brewsentry.com'
             dashboards:
             - name: "Istio Service Dashboard"
@@ -100,4 +100,4 @@ spec:
             in_cluster_url: "http://jaeger-query.observability.svc.cluster.local:16685"
             use_grpc: true
             # Public facing URL of Jaeger
-            url: "http://localhost:16686"
+            # url: "http://localhost:16686"
