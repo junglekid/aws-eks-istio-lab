@@ -6,3 +6,4 @@ resources:
   - release.yaml
   - cert_request.yaml
   - config.yaml
+  - istio-mesh-config.yaml
