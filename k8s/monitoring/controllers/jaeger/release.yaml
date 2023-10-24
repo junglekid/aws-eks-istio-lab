@@ -2,12 +2,12 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: jaeger-operator
+  name: jaeger
   namespace: flux-system
   labels:
-    app.kubernetes.io/part-of: jaeger-operator
+    app.kubernetes.io/part-of: jaeger
 spec:
-  releaseName: jaeger-operator
+  releaseName: jaeger
   targetNamespace: observability
   interval: 30m
   install:
@@ -16,7 +16,7 @@ spec:
     crds: CreateReplace
   chart:
     spec:
-      chart: jaeger-operator
+      chart: jaeger
       sourceRef:
         kind: HelmRepository
         name: jaegertracing
