@@ -31,20 +31,20 @@ spec:
     name: flux-system
   path: ./k8s/infrastructure/configs
   prune: true
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: infra-apps
-  namespace: flux-system
-spec:
-  dependsOn:
-    - name: infra-controllers
-  interval: 10m0s
-  retryInterval: 1m0s
-  timeout: 5m0s
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  path: ./k8s/infrastructure/apps
-  prune: true
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: infra-apps
+#   namespace: flux-system
+# spec:
+#   dependsOn:
+#     - name: infra-controllers
+#   interval: 10m0s
+#   retryInterval: 1m0s
+#   timeout: 5m0s
+#   sourceRef:
+#     kind: GitRepository
+#     name: flux-system
+#   path: ./k8s/infrastructure/apps
+#   prune: true
