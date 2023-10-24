@@ -6,3 +6,10 @@ metadata:
 provisioner: kubernetes.io/aws-ebs
 reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.kubernetes.io/zone
+    values:
+    - AWS_AZ_ZONE_1
+    - AWS_AZ_ZONE_2
+    - AWS_AZ_ZONE_3
