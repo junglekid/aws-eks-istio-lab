@@ -3,6 +3,18 @@ output "aws_region" {
   value = local.aws_region
 }
 
+output "aws_az_zone1" {
+  value = local.azs[0]
+}
+
+output "aws_az_zone2" {
+  value = local.azs[1]
+}
+
+output "aws_az_zone3" {
+  value = local.azs[2]
+}
+
 # Output EKS Cluster Name
 output "eks_cluster_name" {
   value = module.eks.cluster_name
