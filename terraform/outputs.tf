@@ -3,15 +3,19 @@ output "aws_region" {
   value = local.aws_region
 }
 
-output "aws_az_zone1" {
+output "aws_az_zones" {
+  value = [for az in local.azs : az]
+}
+
+output "aws_az_zone_1" {
   value = local.azs[0]
 }
 
-output "aws_az_zone2" {
+output "aws_az_zone_2" {
   value = local.azs[1]
 }
 
-output "aws_az_zone3" {
+output "aws_az_zone_3" {
   value = local.azs[2]
 }
 

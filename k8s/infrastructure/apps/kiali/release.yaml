@@ -96,4 +96,8 @@ spec:
                 namespace: "istio-ingress"
               enabled: true
           tracing:
-            enable: false
+            enabled: true
+            in_cluster_url: "http://jaeger-query.observability.svc.cluster.local:16685"
+            use_grpc: true
+            # Public facing URL of Jaeger
+            url: "http://localhost:16686"

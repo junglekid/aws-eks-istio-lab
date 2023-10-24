@@ -15,6 +15,10 @@ echo "This can take between 30 to 90 seconds..."
 
 cd ../terraform
 AWS_REGION=$(terraform output -raw aws_region)
+AWS_AZ_ZONES=$(terraform output aws_az_zones)
+AWS_AZ_ZONE_1=$(terraform output -raw aws_az_zone_1)
+AWS_AZ_ZONE_2=$(terraform output -raw aws_az_zone_2)
+AWS_AZ_ZONE_3=$(terraform output -raw aws_az_zone_3)
 BASE_DOMAIN_NAME=$(terraform output -raw base_domain_name)
 EKS_CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
 EXTERNAL_DNS_DOMAIN_FILTER=$(terraform output -raw domain_filter)
@@ -62,6 +66,11 @@ replace_in_file 's|AWS_REGION|'"$AWS_REGION"'|g' ./k8s/infrastructure/configs/le
 cp -f ./k8s/templates/infrastructure/configs/wildcard_cert.yaml ./k8s/infrastructure/configs/wildcard_cert.yaml
 replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/infrastructure/configs/wildcard_cert.yaml
 
+cp -f ./k8s/templates/infrastructure/configs/ebs_sc.yaml ./k8s/infrastructure/configs/ebs_sc.yaml
+replace_in_file 's|AWS_AZ_ZONE_1|'"$AWS_AZ_ZONE_1"'|g' ./k8s/infrastructure/configs/ebs_sc.yaml
+replace_in_file 's|AWS_AZ_ZONE_2|'"$AWS_AZ_ZONE_2"'|g' ./k8s/infrastructure/configs/ebs_sc.yaml
+replace_in_file 's|AWS_AZ_ZONE_3|'"$AWS_AZ_ZONE_3"'|g' ./k8s/infrastructure/configs/ebs_sc.yaml
+
 cp -f ./k8s/templates/infrastructure/apps/kiali/cert_request.yaml ./k8s/infrastructure/apps/kiali/cert_request.yaml
 replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/infrastructure/apps/kiali/cert_request.yaml
 
@@ -81,17 +90,14 @@ replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/boo
 
 cp -f ./k8s/templates/apps/base/bookinfo/config.yaml ./k8s/apps/base/bookinfo/config.yaml
 replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/bookinfo/config.yaml
-replace_in_file 's|AWS_ACM_KIALI_ARN|'"$AWS_ACM_BOOKINFO_ARN"'|g' ./k8s/apps/base/bookinfo/config.yaml
+replace_in_file 's|AWS_ACM_BOOKINFO_ARN|'"$AWS_ACM_BOOKINFO_ARN"'|g' ./k8s/apps/base/bookinfo/config.yaml
 
-# cp -f ./k8s/templates/apps/base/podinfo/cert_request.yaml ./k8s/apps/base/podinfo/cert_request.yaml
-# replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/podinfo/cert_request.yaml
+cp -f ./k8s/templates/apps/base/podinfo/cert_request.yaml ./k8s/apps/base/podinfo/cert_request.yaml
+replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/podinfo/cert_request.yaml
 
-# cp -f ./k8s/templates/apps/base/podinfo/config.yaml ./k8s/apps/base/podinfo/config.yaml
-# replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/podinfo/config.yaml
-# replace_in_file 's|AWS_ACM_KIALI_ARN|'"$AWS_ACM_PODINFO_ARN"'|g' ./k8s/apps/base/podinfo/config.yaml
-
-
-
+cp -f ./k8s/templates/apps/base/podinfo/config.yaml ./k8s/apps/base/podinfo/config.yaml
+replace_in_file 's|BASE_DOMAIN_NAME|'"$BASE_DOMAIN_NAME"'|g' ./k8s/apps/base/podinfo/config.yaml
+replace_in_file 's|AWS_ACM_PODINFO_ARN|'"$AWS_ACM_PODINFO_ARN"'|g' ./k8s/apps/base/podinfo/config.yaml
 
 echo ""
 echo "Pushing changes to Git repository..."
@@ -103,6 +109,7 @@ git add ./k8s/infrastructure/controllers/cluster-autoscaler/release.yaml
 git add ./k8s/infrastructure/controllers/cert-manager/release.yaml
 git add ./k8s/infrastructure/configs/letsencrypt.yaml
 git add ./k8s/infrastructure/configs/wildcard_cert.yaml
+git add ./k8s/infrastructure/configs/ebs_sc.yaml
 
 git add ./k8s/infrastructure/apps/kiali/cert_request.yaml
 git add ./k8s/infrastructure/apps/kiali/config.yaml
@@ -113,6 +120,8 @@ git add ./k8s/monitoring/controllers/kube-prometheus-stack/release.yaml
 
 git add ./k8s/apps/base/bookinfo/cert_request.yaml
 git add ./k8s/apps/base/bookinfo/config.yaml
+git add ./k8s/apps/base/podinfo/cert_request.yaml
+git add ./k8s/apps/base/podinfo/config.yaml
 
 # git add ./k8s/apps/base/podinfo.yaml
 # git add ./k8s/apps/base/bookinfo.yaml
