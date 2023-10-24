@@ -48,7 +48,7 @@ spec:
   values:
     pilot:
       autoscaleMin: 2
-      traceSampling: 25
+      traceSampling: 100
     global:
       proxy:
         tracer: zipkin
