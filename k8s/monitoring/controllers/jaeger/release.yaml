@@ -21,9 +21,15 @@ spec:
         kind: HelmRepository
         name: jaegertracing
         namespace: flux-system
-  # values:
-  #   installCRDs: true
-  #   serviceAccount:
-  #     create: true
-  #     annotations:
-  #        eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-istio-lab-cert-manager
+  values:
+    collector:
+      service:
+        zipkin:
+          port: 9411
+        otlp:
+          grpc:
+            name: otlp-grpc
+            port: 4317
+          http:
+            name: otlp-http
+            port: 4318
