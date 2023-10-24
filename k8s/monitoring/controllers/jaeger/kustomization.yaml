@@ -4,4 +4,5 @@ resources:
   - namespace.yaml
   - repository.yaml
   # - jaeger.yaml
-  # - release.yaml
+  - release.yaml
+  - config.yaml
