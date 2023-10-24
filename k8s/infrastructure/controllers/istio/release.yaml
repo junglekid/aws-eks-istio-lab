@@ -48,6 +48,7 @@ spec:
   values:
     pilot:
       autoscaleMin: 2
+      traceSampling: 25
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
@@ -94,3 +95,8 @@ spec:
         targetPort: 443
     autoscaling:
       minReplicas: 2
+    global:
+      proxy:
+        tracer:
+          zipkin:
+            address: jaeger-collector.observability.svc.cluster.local:9411
