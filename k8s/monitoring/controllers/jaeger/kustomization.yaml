@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - repository.yaml
+  - jaeger.yaml
   # - release.yaml
