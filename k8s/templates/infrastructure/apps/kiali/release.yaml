@@ -16,13 +16,6 @@ spec:
         name: kiali
         namespace: flux-system
   values:
-    # resources:
-    #   requests:
-    #     cpu: 100m
-    #     memory: 128Mi
-    #   limits:
-    #     memory: 512Mi
-    # replicaCount: 6
     cr:
       create: true
       namespace: istio-system
@@ -30,50 +23,14 @@ spec:
         istio_labels:
           app_label_name: "app.kubernetes.io/name"
           version_label_name: "app.kubernetes.io/version"
-        # deployment:
-        #   ingress:
-        #     # default: additional_labels is empty
-        #     additional_labels:
-        #       ingressAdditionalLabel: "ingressAdditionalLabelValue"
-        #     class_name: "nginx"
-        #     # default: enabled is undefined
-        #     enabled: false
-        #     # default: override_yaml is undefined
-        #     override_yaml:
-        #       metadata:
-        #         annotations:
-        #           alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
-        #             { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
-        #           alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:704855531002:certificate/d355e1ad-d185-4ae8-b536-51967b156f65"
-        #           alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-        #           alb.ingress.kubernetes.io/scheme: internet-facing
-        #           alb.ingress.kubernetes.io/ssl-redirect: "443"
-        #           alb.ingress.kubernetes.io/target-type: ip
-        #           external-dns.alpha.kubernetes.io/hostname: "kiali.dallin.brewsentry.com"
-        #       spec:
-        #         rules:
-        #         - http:
-        #             paths:
-        #             - path: "/kiali"
-        #               pathType: Prefix
-        #               backend:
-        #                 service:
-        #                   name: "kiali"
-        #                   port:
-        #                     number: 20001
         external_services:
           prometheus:
-            # Prometheus service name is "metrics" and is in the "telemetry" namespace
             url: "http://kube-prometheus-stack-prometheus.monitoring:9090"
           grafana:
             auth:
-              # ca_file: ""
-              # insecure_skip_verify: false
               password: "Grafana&Git0ps"
-              # token: ""
               type: "none"
-              # use_kiali_token: false
-              username: "kiali"
+              username: "admin"
             enabled: true
             in_cluster_url: 'http://kube-prometheus-stack-grafana.monitoring'
             url: 'https://grafana.BASE_DOMAIN_NAME'
@@ -96,4 +53,6 @@ spec:
                 namespace: "istio-ingress"
               enabled: true
           tracing:
-            enable: false
+            enabled: true
+            in_cluster_url: "http://jaeger-query.observability.svc.cluster.local:16685"
+            use_grpc: true

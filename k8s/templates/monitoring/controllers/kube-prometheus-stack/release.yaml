@@ -78,7 +78,7 @@ spec:
         windows: false
     grafana:
       defaultDashboardsEnabled: true
-      adminPassword: "Flux&Git0ps"
+      adminPassword: "Grafana&Git0ps"
       replicas: 1
       ingress:
         enabled: true
