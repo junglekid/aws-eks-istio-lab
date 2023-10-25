@@ -33,4 +33,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# Ignore Mac OS X files
+.DS_Store
+
 **/temp/**
