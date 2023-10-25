@@ -3,10 +3,7 @@ output "aws_region" {
   value = local.aws_region
 }
 
-output "aws_az_zones" {
-  value = [for az in local.azs : az]
-}
-
+# Output AWS Zones
 output "aws_az_zone_1" {
   value = local.azs[0]
 }
@@ -28,6 +25,7 @@ output "eks_cluster_endpoint" {
   value = module.eks.cluster_endpoint
 }
 
+# Output EKS IAM Roles ARN
 output "eks_sa_alb_iam_role_arn" {
   value = module.load_balancer_controller_irsa_role.iam_role_arn
 }
@@ -62,30 +60,22 @@ output "route53_zone_id" {
   value = local.route53_zone_id
 }
 
-# Podinfo
-output "podinfo_acm_certificate_arn" {
-  value = aws_acm_certificate_validation.podinfo.certificate_arn
-}
-
-## Grafana
-output "grafana_acm_certificate_arn" {
-  value = aws_acm_certificate_validation.grafana.certificate_arn
-}
-
-## Kiali
-output "kiali_acm_certificate_arn" {
-  value = aws_acm_certificate_validation.kiali.certificate_arn
-}
-
-## Bookinfo
+## Output Bookinfo ACM ARN
 output "bookinfo_acm_certificate_arn" {
   value = aws_acm_certificate_validation.bookinfo.certificate_arn
 }
 
-# output "route53_zone_arn" {
-#   value = local.route53_zone_arn
-# }
+# Output Podinfo ACM ARN
+output "podinfo_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.podinfo.certificate_arn
+}
 
-# output "eks_sqs_keda_irsa_role" {
-#   value = module.sqs_keda_irsa_role.iam_role_arn
-# }
+## Output Grafana ACM ARN
+output "grafana_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.grafana.certificate_arn
+}
+
+## Output Kiali ACM ARN
+output "kiali_acm_certificate_arn" {
+  value = aws_acm_certificate_validation.kiali.certificate_arn
+}

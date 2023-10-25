@@ -2,7 +2,7 @@ terraform {
 
   backend "s3" {
     bucket         = "dallin-tf-backend" # Update the bucket name
-    key            = "eks-istio-lab"    # Update key name
+    key            = "eks-istio-lab"     # Update key name
     region         = "us-west-2"         # Update with aws region
     profile        = "bsisandbox"        # Update profile name
     encrypt        = true
