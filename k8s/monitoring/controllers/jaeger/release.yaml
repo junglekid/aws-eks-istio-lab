@@ -9,6 +9,9 @@ metadata:
 spec:
   releaseName: jaeger-operator
   targetNamespace: observability
+  dependsOn:
+    - name: kube-prometheus-stack
+      namespace: monitoring
   interval: 30m
   install:
     crds: CreateReplace
