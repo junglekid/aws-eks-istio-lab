@@ -1,0 +1,130 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+spec:
+  interval: 1h
+  chart:
+    spec:
+      version: "51.x"
+      chart: kube-prometheus-stack
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+      interval: 1h
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  valuesFrom:
+  - kind: ConfigMap
+    name: flux-kube-state-metrics-config
+    valuesKey: kube-state-metrics-config.yaml
+  # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
+  values:
+    alertmanager:
+      enabled: true
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: ebs-sc
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 50Gi
+    prometheus:
+      prometheusSpec:
+        replicas: 1
+        retention: 45d
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: ebs-sc
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 200Gi
+        # resources:
+        #   requests:
+        #     cpu: 200m
+        #     memory: 200Mi
+        podMonitorNamespaceSelector: { }
+        podMonitorSelector:
+          matchLabels:
+            app.kubernetes.io/component: monitoring
+        additionalScrapeConfigs:
+        - job_name: 'istiod'
+          kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+              - istio-system
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: istiod;http-monitoring
+        - job_name: 'envoy-stats'
+          metrics_path: /stats/prometheus
+          kubernetes_sd_configs:
+          - role: pod
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: '.*-envoy-prom'
+    defaultRules:
+      create: true
+      rules:
+        windows: false
+    grafana:
+      defaultDashboardsEnabled: true
+      adminPassword: "Grafana&Git0ps"
+      replicas: 1
+      ingress:
+        enabled: true
+        ingressClassName: "alb"
+        annotations:
+          alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
+            { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+          alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:704855531002:certificate/24ee38be-a694-4b09-898e-d6b4932d4922"
+          alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+          alb.ingress.kubernetes.io/scheme: internet-facing
+          alb.ingress.kubernetes.io/ssl-redirect: "443"
+          alb.ingress.kubernetes.io/target-type: ip
+          alb.ingress.kubernetes.io/healthcheck-path: /api/health
+          external-dns.alpha.kubernetes.io/hostname: grafana.dallin.brewsentry.com
+        hosts:
+        - grafana.dallin.brewsentry.com
+      persistence:
+        type: pvc
+        enabled: true
+        storageClassName: ebs-sc
+        accessModes: ["ReadWriteOnce"]
+        size: 100Gi
+      sidecar:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          folder: /tmp/dashboards
+          provider:
+            foldersFromFilesStructure: true
+          annotations:
+            k8s-sidecar-target-directory: "/tmp/dashboards/Kubernetes"
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              # Ignore these objects from Flux diff as they are mutated from chart hooks
+              kind: (ValidatingWebhookConfiguration|MutatingWebhookConfiguration)
+              name: kube-prometheus-stack-admission
+            patch: |
+              - op: add
+                path: /metadata/annotations/helm.toolkit.fluxcd.io~1driftDetection
+                value: disabled
+          - target:
+              # Ignore these objects from Flux diff as they are mutated at apply time but not at dry-run time
+              kind: PrometheusRule
+            patch: |
+              - op: add
+                path: /metadata/annotations/helm.toolkit.fluxcd.io~1driftDetection
+                value: disabled
