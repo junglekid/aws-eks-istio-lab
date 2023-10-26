@@ -17,9 +17,9 @@ locals {
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   # EKS Configuration
-  eks_cluster_name                            = "eks-istio-lab"
-  eks_cluster_version                         = "1.28" # To always use the latest set to "" instead of "1.xx"
-  eks_iam_role_prefix                         = "eks-istio-lab"
+  eks_cluster_name    = "eks-istio-lab"
+  eks_cluster_version = "1.28" # To always use the latest set to "" instead of "1.xx"
+  eks_iam_role_prefix = "eks-istio-lab"
 
   # ACM and Route53 Configuration
   public_base_domain_name = "dallin.brewsentry.com" # Update with your root domain

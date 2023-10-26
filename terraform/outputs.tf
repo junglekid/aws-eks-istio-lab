@@ -52,10 +52,6 @@ output "base_domain_name" {
   value = local.public_base_domain_name
 }
 
-output "route53_zone_arn" {
-  value = local.route53_zone_arn
-}
-
 output "route53_zone_id" {
   value = local.route53_zone_id
 }
