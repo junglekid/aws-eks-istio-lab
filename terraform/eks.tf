@@ -40,22 +40,48 @@ module "eks" {
 }
 
 # Create AWS EKS Node Group
-resource "aws_eks_node_group" "eks" {
+resource "aws_eks_node_group" "eks_ng1" {
   cluster_name    = module.eks.cluster_name
-  node_group_name = "node_workers"
+  node_group_name = "node_workers_1"
   node_role_arn   = aws_iam_role.eks_node.arn
-  subnet_ids      = module.vpc.private_subnets
+  subnet_ids      = [module.vpc.private_subnets[0]]
   instance_types  = ["m6a.xlarge", "m6i.xlarge", "m5a.xlarge", "m5.xlarge"]
   capacity_type   = "SPOT"
 
   scaling_config {
-    desired_size = 3
-    max_size     = 20
-    min_size     = 3
+    desired_size = 1
+    max_size     = 4
+    min_size     = 1
   }
+}
 
-  update_config {
-    max_unavailable = 1
+resource "aws_eks_node_group" "eks_ng2" {
+  cluster_name    = module.eks.cluster_name
+  node_group_name = "node_workers_2"
+  node_role_arn   = aws_iam_role.eks_node.arn
+  subnet_ids      = [module.vpc.private_subnets[1]]
+  instance_types  = ["m6a.xlarge", "m6i.xlarge", "m5a.xlarge", "m5.xlarge"]
+  capacity_type   = "SPOT"
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 4
+    min_size     = 1
+  }
+}
+
+resource "aws_eks_node_group" "eks_ng3" {
+  cluster_name    = module.eks.cluster_name
+  node_group_name = "node_workers_3"
+  node_role_arn   = aws_iam_role.eks_node.arn
+  subnet_ids      = [module.vpc.private_subnets[2]]
+  instance_types  = ["m6a.xlarge", "m6i.xlarge", "m5a.xlarge", "m5.xlarge"]
+  capacity_type   = "SPOT"
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 4
+    min_size     = 1
   }
 }
 
