@@ -8,6 +8,9 @@ spec:
   releaseName: metrics-server
   targetNamespace: kube-system
   interval: 30m
+  dependsOn:
+    - name: aws-load-balancer-controller
+      namespace: flux-system
   chart:
     spec:
       chart: metrics-server
