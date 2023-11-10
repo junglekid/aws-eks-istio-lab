@@ -16,22 +16,25 @@
 10. [Kubernetes Addons managed by Flux](#kubernetes-addons-managed-by-flux)
 11. [Applications managed by Flux](#applications-managed-by-flux)
 12. [Istio and Istio Addons managed by Flux](#istio-and-istio-addons-managed-by-flux)
-13. [Access Applications managed by Flux](#access-applications-managed-by-flux)
+13. [Review how Istio works with Applications and Microservices](#review-how-istio-works-with-applications-and-microservices)
+    1. [Review Configuration of Kubernetes Namespaces work with Istio](#review-configuration-of-kubernetes-namespaces-work-with-istio)
+    2. [Review Configuration of Istio Gateway and VirtualServices](#review-configuration-of-istio-gateway-and-virtualservices)
+14. [Access Applications managed by Flux](#access-applications-managed-by-flux)
     1. [Access Bookinfo App](#access-bookinfo-app)
     2. [Access Podinfo App](#access-podinfo-app)
-14. [Access Istio Addons](#access-istio-addons)
+15. [Access Istio Addons](#access-istio-addons)
     1. [Access Kiali Dashboard](#access-kiali-dashboard)
     2. [Access Grafana Dashboard](#access-grafana-dashboard)
-15. [Demonstrate how Istio works](#demonstrate-how-istio-works)
+16. [Demonstrate how Istio works](#demonstrate-how-istio-works)
     1. [Populate Data for Kiali and Istio Dashboards in Grafana](#populate-data-for-kiali-and-istio-dashboards-in-grafana)
     2. [Access and Review Data in Kiali Dashboard](#access-and-review-data-in-kiali-dashboard)
     3. [Access Istio Dashboards in Grafana](#access-istio-dashboards-in-grafana)
-16. [Clean Up](#clean-up)
+17. [Clean Up](#clean-up)
     1. [Clean up Applications managed by Flux from Kubernetes](#clean-up-applications-managed-by-flux-from-kubernetes)
     2. [Clean up Kubernetes AddOns managed by Flux from Kubernetes](#clean-up-kubernetes-addons-managed-by-flux-from-kubernetes)
     3. [Uninstall Flux from Kubernetes](#uninstall-flux-from-kubernetes)
     4. [Clean up Terraform](#clean-up-terraform)
-17. [Conclusion](#conclusion)
+18. [Conclusion](#conclusion)
 
 ## Introduction
 
@@ -347,6 +350,175 @@ The following components are not necessary to run Istio but are addons to help t
   - [Prometheus](https://prometheus.io/) - An open-source monitoring system with a dimensional data model, flexible query language, and powerful alerting functionality for storing and querying time-series data.
   - [Grafana](https://grafana.com/oss/) - An open-source analytics and monitoring platform designed for visualizing and exploring metrics from various databases and time-series data.
 - [Grafana Loki](https://grafana.com/oss/loki/) - A horizontally scalable, multi-tenant log aggregation system inspired by Prometheus, designed for cost-effective storage and querying of logs at scale.
+
+## Review how Istio works with Applications and Microservices
+
+### Review Configuration of Kubernetes Namespaces work with Istio
+
+By default, Istio doesn't inject sidecars/proxies into the pods. The easiest way to have Istio inject a sidecar/proxy to a pod is by adding a label to a Kubernetes namespace. When the label is added to an existing Kubernetes namespace, the existing pods must be deleted to add the sidecar/proxy container.
+
+As part of the Bookinfo and Podinfo installation managed by Flux, the Kubernetes namespaces included the label to have Istio inject a sidecar/proxy. Let's review the Kubernetes namespaces that have the label "istio-injection=enabled".
+
+In the Bookinfo namespace.yaml file. As you can see, when this namespace is created, the label "istio-injection=enabled" is added.
+
+'''yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookinfo
+  labels:
+    istio-injection: enabled
+'''
+
+Let's review which Kubernetes namespaces have the label "istio-injection=enabled".
+
+1. Run the following command to determine which Kubernetes namespaces have the label "istio-injection=enabled".
+
+2. The result is four Kubernetes namespaces with the label "istio-injection=enabled".
+
+   ![Istio Proxy Enabled Namespaces](./images/istio_proxy_enabled_ns.png)
+
+3. Check Pods in the Bookinfo namespace as two containers running for each pod by running the following command.
+
+4. As you can see, each pod is running two containers
+
+   ![Istio Proxy Enabled Bookinfo Pods](./images/istio_proxy_enabled_bookinfo_pods.png)
+
+### Review Configuration of Istio Gateway and VirtualServices
+
+Istio Gateway is a component of the Istio service mesh that manages incoming and outgoing traffic for microservices-based applications. It handles routing, load balancing, security, and TLS termination tasks. You define routing rules, authentication, and authorization policies, and it provides observability and high availability features to ensure efficient and secure communication within the service mesh.
+
+Istio VirtualService is a Kubernetes custom resource definition (CRD) that defines how traffic is routed to services in a service mesh. It is a powerful tool that can be used to implement various traffic management policies, such as load balancing, fault injection, and rate limiting.
+
+Here is the Istio Gateway that was created. This is an Istio Ingress Gateway.
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: common-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https-443
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: "wildcard-tls"
+      hosts:
+        - "*"
+    - port:
+        number: 80
+        name: http-80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+      hosts:
+        - "*"
+```
+
+As part of the Istio Gateway, a TLS certificate is required. The TLS certificate can be created in several ways, but for the guide, Cert-Manager was used to create a wildcard certificate with Let's Encrypt.
+
+When Istio Gateways are created, a Kubernetes Service is created. This Kubernetes Service can be defined and used in Kubernetes Ingresses.
+
+Let's review the Bookinfo Kubernetes Ingress to see how this works.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
+      { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:012345678910:certificate/3860d571-18bc-4c62-af82-92a5d1cc3aba"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
+    alb.ingress.kubernetes.io/healthcheck-port: status-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    external-dns.alpha.kubernetes.io/hostname: "bookinfo.dallin.brewsentry.com"
+  name: bookinfo-ingress
+  namespace: istio-ingress
+spec:
+  ingressClassName: alb
+  tls:
+  - hosts:
+    - bookinfo.dallin.brewsentry.com
+    secretName: bookinfo-tls
+  rules:
+  - host: bookinfo.dallin.brewsentry.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: istio-ingressgateway
+            port:
+              number: 443
+        path: /*
+        pathType: ImplementationSpecific
+```
+
+The Bookinfo Kubernetes Ingress has a rule that listens for requests from a host and then routes the requests to the istio-ingressgateway Kubernetes Service.
+
+Istio VirtualService is a Kubernetes custom resource definition (CRD) that defines how traffic is routed to services in a service mesh. It is a powerful tool that can be used to implement various traffic management policies, such as load balancing, fault injection, and rate limiting.
+
+A VirtualService consists of a set of routing rules. Each routing rule defines a match condition and a destination. A request is routed to the destination if it matches the match condition.
+
+Here is the VirtualService for Bookinfo.
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: bookinfo-vs
+  namespace: bookinfo
+spec:
+  hosts:
+  - "bookinfo.dallin.brewsentry.com"
+  gateways:
+  - istio-ingress/common-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    redirect:
+      uri: /productpage
+  - match:
+    - uri:
+        exact: /productpage
+    - uri:
+        prefix: /static
+    - uri:
+        exact: /login
+    - uri:
+        exact: /logout
+    - uri:
+        prefix: /api/v1/products
+    route:
+    - destination:
+        host: productpage
+        port:
+          number: 9080
+```
+
+Let's review what Istio VirtualServices were created.
+
+1. Run the following command to determine what Istio virtual services were created.
+
+   ```bash
+   kubectl get virtualservices.networking.istio.io -A
+   ```
+
+2. The result is that three Istio virtual services were created.
+
+   ![Istio VirtualServices](./images/istio_virtualservices.png)
 
 ## Access Applications managed by Flux
 
