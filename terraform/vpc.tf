@@ -5,8 +5,6 @@ module "vpc" {
 
   private_subnets     = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
   public_subnets      = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
-  elasticache_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 64)]
-  database_subnets    = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 80)]
 
   name                 = local.vpc_name
   cidr                 = local.vpc_cidr

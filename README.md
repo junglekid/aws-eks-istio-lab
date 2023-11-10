@@ -1,6 +1,6 @@
-# Using Istio to Secure Workloads with Amazon Elastic Kubernetes Service (EKS)
+# Using Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS)
 
-![Using Flux, a GitOps Tool, with Amazon Elastic Kubernetes Service (EKS)](./images/flux_and_aws_eks.png)
+![Using Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS)](./images/istio_and_aws_eks.png)
 
 ## Table of Contents
 
@@ -14,160 +14,114 @@
 8. [Configure and Install Flux](#configure-and-install-flux)
 9. [Managing Flux](#managing-flux)
 10. [Kubernetes Addons managed by Flux](#kubernetes-addons-managed-by-flux)
-11. [Istio and Istio Addons managed by Flux](#istio-and-istio-addons-managed-by-flux)
-12. [Applications managed by Flux](#applications-managed-by-flux)
+11. [Applications managed by Flux](#applications-managed-by-flux)
+12. [Istio and Istio Addons managed by Flux](#istio-and-istio-addons-managed-by-flux)
 13. [Access Applications managed by Flux](#access-applications-managed-by-flux)
-14. [Demonstrate how Flux works](#demonstrate-how-flux-works)
-    1. [Check the Status of Flux](#check-the-status-of-flux)
-    2. [Reconcile Helm Release with Flux](#reconcile-helm-release-with-flux)
-15. [Clean Up](#clean-up)
+    1. [Access Bookinfo App](#access-bookinfo-app)
+    2. [Access Podinfo App](#access-podinfo-app)
+14. [Access Istio Addons](#access-istio-addons)
+    1. [Access Kiali Dashboard](#access-kiali-dashboard)
+    2. [Access Grafana Dashboard](#access-grafana-dashboard)
+15. [Demonstrate how Istio works](#demonstrate-how-istio-works)
+    1. [Populate Data for Kiali and Istio Dashboards in Grafana](#populate-data-for-kiali-and-istio-dashboards-in-grafana)
+    2. [Access and Review Data in Kiali Dashboard](#access-and-review-data-in-kiali-dashboard)
+    3. [Access Istio Dashboards in Grafana](#access-istio-dashboards-in-grafana)
+16. [Clean Up](#clean-up)
     1. [Clean up Applications managed by Flux from Kubernetes](#clean-up-applications-managed-by-flux-from-kubernetes)
     2. [Clean up Kubernetes AddOns managed by Flux from Kubernetes](#clean-up-kubernetes-addons-managed-by-flux-from-kubernetes)
     3. [Uninstall Flux from Kubernetes](#uninstall-flux-from-kubernetes)
     4. [Clean up Terraform](#clean-up-terraform)
-16. [Conclusion](#conclusion)
+17. [Conclusion](#conclusion)
 
 ## Introduction
 
-Have you ever wondered if there was a better way to manage the lifecycle of an application, from deploying the application, scaling the application, and managing the required infrastructure while storing the code in Git and allowing versioning of the code? Well, there is a way. It is called GitOps.
+Have you ever wondered if there was a better way to manage, monitor, or secure your distributed microservices without adding these to your own code? Well, there is a way. It is called a Service Mesh.
 
-This guide will explain what GitOps is and show you how to use Flux, a GitOps tool, with Amazon Elastic Kubernetes Service (EKS). You will use Flux to deploy various Kubernetes Services and Applications to Amazon Elastic Kubernetes Service (EKS). In addition, you will create a container image containing the code for the React container. You will upload the container image to a private Amazon Elastic Container Registry.
+This is the first part of the series on Using Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS). This guide will explain what Service Mesh and Istio are and show you how to use Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS). You will use Flux to deploy various Kubernetes Services and Applications, including Istio, and supporting applications and microservices to Amazon Elastic Kubernetes Service (EKS).
 
-You can access all of the code used in my [GitHub Repository](https://github.com/junglekid/aws-eks-istio-lab).
+You can access the code in my [GitHub Repository](https://github.com/junglekid/aws-eks-istio-lab).
 
-Before we begin, let's define what GitOps is and what GitOps tool we will use in this guide.
+Before we begin, let's define what Service Mesh and Istio are.
 
 ## What is a Service Mesh?
 
-ChatGPT-4
-A service mesh is an infrastructure layer for handling service-to-service communication in microservices architectures. As the name suggests, it's a mesh of interconnected services, and it's primarily designed to solve problems and provide functionalities that become evident when you have many services talking to each other, especially in cloud-native deployments like Kubernetes.
+A service mesh is a dedicated infrastructure layer for facilitating service-to-service communications between microservices, often in a cloud-based application. It's designed to handle a high volume of network-based inter-process communication among application infrastructure services using application programming interfaces (APIs).
 
-Here's a breakdown of what a service mesh provides:
+Here's a breakdown of the key components and concepts of a service mesh:
 
-1. **Traffic Management:** Control the flow of traffic and API calls between services. This can be useful for features like canary deployments, A/B testing, and blue-green deployments.
+1. **Sidecar Proxy**: In a typical service mesh, each microservice is paired with a lightweight network proxy that intercepts network communication. This proxy, often called a "sidecar," intercepts all network communication to and from the service.
 
-2. **Load Balancing:** Distribute incoming requests to different instances of a service, taking into account the service's health, availability, and other metrics.
+2. **Data Plane**: The collection of sidecar proxies that intercept and control the network traffic between services make up the data plane. They are responsible for features like service discovery, health checking, routing, load balancing, authentication, authorization, and observability.
 
-3. **Service Discovery:** Automatically discover and connect to available service instances in dynamic environments.
+3. **Control Plane**: This is the administrative layer of the service mesh that provides the management capabilities. It allows operators to configure the proxies in the data plane and apply policies. It's also where the service mesh’s intelligence resides, as it controls the behavior of the proxy servers.
 
-4. **Security:** Secure communication between services with features like mutual TLS authentication, identity verification, and authorization.
+4. **Service Discovery**: Service meshes can dynamically recognize the addition of new services and the removal of old ones, adapting to the changes in the infrastructure.
 
-5. **Observability:** Provide insights into the behavior of your services through metrics, logging, and tracing. This allows for monitoring, anomaly detection, and troubleshooting.
+5. **Traffic Management**: It can intelligently control the flow of traffic and API calls between services, handling load balancing, routing, and circuit breaking.
 
-6. **Fault Tolerance:** Implement strategies to handle service failures, such as timeouts, retries, circuit breakers, and rate limiting.
+6. **Security**: Service meshes can handle encryption in transit and enforce security policies, like mutual TLS (mTLS), for service identity verification and secure communication.
 
-7. **Policy Enforcement:** Set and enforce policies related to security, traffic, and other aspects without changing the service code.
+7. **Observability**: Provides monitoring, logging, and tracing of service interactions, which is vital for diagnosing issues and understanding system behavior.
 
-A service mesh achieves these functionalities using two main components:
+8. **Policy Enforcement**: It allows operators to apply organizational policies related to security, compliance, and governance across all service communications.
 
-1. **Data Plane:** This is where the actual processing of the traffic occurs. It typically consists of lightweight proxies (e.g., Envoy in the case of Istio) that are deployed alongside each service instance, often referred to as "sidecars". These proxies intercept and handle all the network traffic for their associated service.
+Examples of Service Meshes:
 
-2. **Control Plane:** This is the brain behind the service mesh, responsible for managing and configuring the sidecar proxies. It provides interfaces for operators to set desired traffic rules, policies, and more.
+- **Istio**: One of the most popular service mesh solutions, Istio is designed to connect, secure, control, and observe services. It works with Kubernetes but can also be adapted to integrate with other environments. It provides robust traffic management, security features, and observability.
 
-The concept of a service mesh has gained popularity with the rise of container orchestration platforms like Kubernetes. When you have dozens, hundreds, or even thousands of services communicating, the complexity can become overwhelming. A service mesh abstracts and manages this complexity, allowing developers and operators to focus more on business logic and less on network-related challenges.
+- **Linkerd**: Known for its simplicity and ease of use, Linkerd is a lightweight service mesh that offers core service mesh features like service discovery, routing, failure handling, and metrics. It's designed to be as transparent as possible and can be used with Kubernetes and other frameworks.
 
-Popular service mesh implementations include Istio, Linkerd, and Consul Connect, among others.
+- **Consul**: Consul by HashiCorp provides a full-featured control plane with service discovery, health checking, and a service mesh. It can be used with Kubernetes or virtual machines and is known for its cross-datacenter functionality.
 
-Bard
+- **AWS App Mesh**: This service mesh provided by AWS makes it easy to manage and communicate between microservices across multiple types of compute infrastructure. App Mesh standardizes how your services communicate, giving end-to-end visibility and helping to ensure high availability for your applications.
 
-A service mesh is a dedicated infrastructure layer that controls service-to-service communication in a microservices architecture. It handles tasks such as load balancing, service discovery, authentication, authorization, and fault tolerance. A service mesh is typically implemented using a sidecar proxy that runs alongside each microservice.
-
-Service meshes are becoming increasingly popular as microservices architectures become more widely adopted. Microservices architectures offer a number of benefits, such as scalability, agility, and resilience. However, they also add complexity to managing and operating applications. A service mesh can help to simplify the management of microservices by providing a centralized layer for controlling service-to-service communication.
-
-Here are some of the benefits of using a service mesh:
-
-* **Improved performance**: A service mesh can improve the performance of microservices applications by optimizing traffic routing and load balancing.
-
-* **Increased security**: A service mesh can help to protect microservices applications from attack by providing authentication, authorization, and encryption capabilities.
-
-* **Enhanced observability**: A service mesh can collect and analyze telemetry data from all services in the mesh, providing a unified view of the application's health and performance.
-
-* **Simplified management**: A service mesh can simplify the management of microservices applications by providing a centralized layer for controlling service-to-service communication.
-
-Some popular service mesh implementations include Istio, Linkerd, and Consul Connect.
-
-Here is a simple example of how a service mesh works:
-
-1. A client application sends a request to a microservice.
-2. The request is intercepted by the service mesh proxy running alongside the microservice.
-3. The service mesh proxy authenticates the client application and authorizes it to access the microservice.
-4. The service mesh proxy routes the request to the microservice instance that is best suited to handle it.
-5. The microservice instance processes the request and sends a response back to the client application.
-6. The service mesh proxy decrypts the response and sends it to the client application.
-
-The service mesh proxy is transparent to the client application and the microservice instance. The client application does not need to know anything about the service mesh in order to communicate with the microservice.
-
-Service meshes can be a valuable tool for managing microservices applications. They can help to improve performance, security, observability, and manageability.
+Service meshes are helpful because they offload common functionalities from the application code, allowing developers to focus on the business logic rather than the complexities of networking. However, they also add a new layer to the infrastructure stack, which can increase complexity and the operational burden if not managed properly.
 
 ## What is Istio?
 
-Chat-GPT 4
+Istio is an open-source service mesh that helps organizations run distributed, microservices-based applications more securely, reliably, and efficiently. It's designed to connect, monitor, and secure microservices, providing tools to manage traffic flows between services, enforce policies, and aggregate telemetry data. Google, IBM, and Lyft originally developed it and are now part of the Cloud Native Computing Foundation (CNCF). Istio is platform-independent but often associated with Kubernetes, commonly used to orchestrate containers that host microservices.
 
-Istio is an open-source service mesh that provides a way to control, connect, secure, and monitor microservices, typically in Kubernetes environments. With the microservices architecture gaining popularity, challenges related to inter-service communication, monitoring, and security became evident. Istio aims to address these challenges.
+Here's a brief overview of what Istio can do:
 
-Here are some of the key features and capabilities provided by Istio:
+1. **Traffic Management**: Istio provides advanced routing capabilities, allowing for A/B testing, canary releases, and more. It does this by managing the flow of traffic and API calls between services, which is crucial in a microservices architecture. It enables request retries, fault injection, and traffic splitting for increased resilience and control.
 
-1. **Traffic Management:** Istio provides advanced routing and traffic management capabilities. This includes A/B testing, canary releases, traffic splitting, and fault injection.
+2. **Security**: Istio enhances security by providing inter-service authentication and authorization without requiring changes to the application. It manages certificates and keys and ensures encrypted communication between services with mutual TLS (mTLS), helping to reduce the risk of man-in-the-middle attacks.
 
-2. **Observability:** With Istio, you can gain insights into how services are interacting with each other. It provides detailed metrics, logs, and distributed traces that help in understanding the performance and behavior of applications.
+3. **Observability**: It offers insights into the behavior of the services, including monitoring, logging, and tracing of the communications, which helps in understanding the performance and issues in the applications.
 
-3. **Security:** Istio provides a robust security model that includes service-to-service authentication, authorization, and encryption. With Istio, you can enforce policies at runtime and ensure secure communication between services.
+4. **Policy Enforcement**: Istio allows you to enforce policies regarding access control and resource usage across your microservices without modifying the services themselves.
 
-4. **Resilience:** Istio provides features like timeouts, retries, circuit breakers, and pool ejection which help in making your applications more resilient to failures.
+5. **Service Discovery**: Istio supports service discovery mechanisms, making it easier for services to find and communicate with each other in a dynamic environment.
 
-5. **Policy Enforcement:** Istio allows you to configure and enforce policies at runtime without changing the application code. This can be particularly useful for rate limiting, access controls, and quota management.
+Istio achieves these features by deploying a special sidecar proxy (Envoy proxy) alongside each service instance. These proxies intercept and control all network communication between microservices, and they are managed by Istio's control plane, which provides the necessary rules for the proxies.
 
-6. **Extensibility:** Istio's architecture allows it to be easily extended to integrate with other systems and tools.
+Istio’s service mesh architecture is composed of:
 
-To achieve these features, Istio uses a sidecar proxy (usually Envoy) that is deployed alongside each microservice. This sidecar intercepts all the network traffic for that microservice and provides the aforementioned capabilities. This design enables Istio to be platform-agnostic, meaning it can be used with any combination of workloads and orchestrators.
+- **Data Plane**: Consisting of intelligent proxies (Envoy) deployed as sidecars that mediate and control all network communication between microservices.
 
-Istio's control plane components, including the likes of Pilot, Mixer, Citadel, and Galley, provide the necessary configuration to the sidecar proxies to handle the traffic according to user-defined policies.
+- **Control Plane**: Manages and configures the proxies to route traffic and enforces policies at runtime.
 
-For developers and operators working in Kubernetes and other cloud-native environments, Istio offers a powerful toolkit to help manage the complexities of distributed systems.
+Istio is designed to work on various environments, including on-premises, cloud-hosted, and hybrid environments, and it can run with services written in any language.
 
-Bard
+Istio operates at the platform layer, providing the infrastructure necessary to manage the interactions between microservices, while the application code remains unaware of Istio’s existence. It is typically used in Kubernetes environments but can also be used with other orchestration solutions. Its control plane architecture is responsible for managing the overall configuration and behavior of the service mesh.
 
-Istio is an open-source service mesh that provides a uniform way to connect, secure, control, and observe services. It layers transparently onto existing distributed applications without requiring any changes to application code.
+By decoupling development concerns from operational challenges, Istio provides a uniform way to secure, connect, and monitor microservices.
 
-Istio is made up of two main components: the data plane and the control plane. The data plane is responsible for handling and routing traffic between services. It does this by deploying a sidecar proxy alongside each service. The sidecar proxy intercepts all incoming and outgoing traffic to and from the service and applies Istio's policies to it.
-
-The control plane is responsible for configuring and managing the data plane. It provides a unified view of all services in the mesh and allows administrators to define and enforce policies for those services.
-
-Istio provides a number of features that can be used to manage microservices, including:
-
-* **Traffic management**: Istio provides fine-grained control over traffic routing, load balancing, and retries. This can be used to improve the performance and reliability of microservices applications.
-
-* **Security**: Istio provides mutual TLS authentication and authorization for services. It can also be used to encrypt traffic between services and to implement other security features such as rate limiting and circuit breaking.
-
-* **Observability**: Istio collects and aggregates telemetry data from all services in the mesh. This data can be used to monitor the health and performance of microservices applications.
-
-Istio is a powerful tool that can be used to simplify the management of microservices applications. It is used by a number of large companies, including Google, Netflix, and IBM.
-
-Here are some of the benefits of using Istio:
-
-* **Reduced complexity**: Istio centralizes the management of microservices, making it easier to manage and operate complex applications.
-
-* **Improved performance**: Istio can improve the performance of microservices applications by optimizing traffic routing and load balancing.
-
-* **Increased security**: Istio provides a number of security features that can help to protect microservices applications from attack.
-
-* **Enhanced observability**: Istio collects and aggregates telemetry data from all services in the mesh, providing a unified view of the application's health and performance.
-
-Overall, Istio is a powerful tool that can help organizations to modernize their applications and improve their performance, security, and observability.
+Now that we have discussed what Service Mesh and Istio are, we will discuss what technologies we will use and review the Terraform code used to configure and deploy the Infrastructure.
 
 ## Architecture Overview
 
-* HashiCorp Terraform
-* Istio
-* Flux
-* GitHub
-* Amazon Elastic Kubernetes Service (EKS)
-* Amazon Elastic Container Registry (ECR)
-* AWS Key Management Service (KMS)
-* Amazon Route 53
-* AWS Certificate Manager (ACM)
-* Amazon Virtual Private Cloud (Amazon VPC)
-* IAM policies and roles
+- HashiCorp Terraform
+- Istio
+- Flux
+- GitHub
+- Amazon Elastic Kubernetes Service (EKS)
+- Amazon Elastic Container Registry (ECR)
+- AWS Key Management Service (KMS)
+- Amazon Route 53
+- AWS Certificate Manager (ACM)
+- Amazon Virtual Private Cloud (Amazon VPC)
+- IAM policies and roles
 
 ## Prerequisites
 
@@ -187,17 +141,17 @@ Follow these steps to set up the environment.
 
 1. Set variables in "locals.tf". Below are some of the variables that should be set.
 
-   * aws_region
-   * aws_profile
-   * tags
-   * public_base_domain_name
+   - aws_region
+   - aws_profile
+   - tags
+   - public_base_domain_name
 
 2. Update Terraform S3 Backend in provider.tf
 
-   * bucket
-   * key
-   * profile
-   * dynamodb_table
+   - bucket
+   - key
+   - profile
+   - dynamodb_table
 
 3. Navigate to the Terraform directory
 
@@ -249,7 +203,7 @@ Results of configuring kubeconfig.
 
 ![Configure Amazon EKS Cluster](./images/kubeconfig.png)
 
-## Install Istioctl CLI
+## Install Istio CLI - istioctl
 
 1. Install Istioctl CLI
 
@@ -261,23 +215,32 @@ Results of configuring kubeconfig.
 
    b. For Windows, follow these instructions.
 
-      1. Install with Scoop
+      1. Install with [Chocolatey](https://chocolatey.org/install)
+
+         ```powershell
+         choco install istioctl
+         ```
+
+      2. Install with [Scoop](https://scoop.sh/)
 
          ```powershell
          scoop bucket add main
          scoop install main/istioctl
          ```
 
-      2. Install with Chocolatey
-
-         ```
-         choco install istioctl
-         ```
-
    c. Install instructions for other methods can be found [here](https://istio.io/latest/docs/setup/getting-started/).
 
-2. Instructions on how to use **istioctl** can be found[here](https://istio.io/latest/docs/reference/commands/istioctl) and [here]
-(<https://istio.io/latest/docs/ops/diagnostic-tools/istioctl>).
+2. Instructions on how to use **istioctl** can be found [here](https://istio.io/latest/docs/reference/commands/istioctl) and [here](https://istio.io/latest/docs/ops/diagnostic-tools/istioctl).
+
+3. Verify that **istioctl** is installed by running the following command.
+
+   ```bash
+   istioctl version
+   ```
+
+4. Results of running **istioctl**.
+
+   ![istioctl](./images/istioctl.png)
 
 ## Configure and Install Flux
 
@@ -290,7 +253,7 @@ Results of configuring kubeconfig.
    export GITHUB_REPO_NAME='<REPLACE_WITH_GITHUB_REPO_NAME>'
    ```
 
-2. Configure Flux Repository by running the "configure.sh" script. The "configure.sh" script updates the various applications with the necessary values to run correctly. Navigate to the root of the directory of the GitHub repo and run the following commands:
+2. Configure the Flux Repository by running the "configure.sh" script. The "configure.sh" script updates the various applications with the necessary values to run correctly. Navigate to the root of the directory of the GitHub repo and run the following commands:
 
    ```bash
    cd scripts
@@ -319,6 +282,14 @@ Results of configuring kubeconfig.
 
    ![Install Flux](./images/flux_install.png)
 
+6. Wait 2 to 5 minutes for Flux to reconcile the Git repository we specified, During this time, Flux will install and configure all of the defined Kubernetes Addons and Applications.
+
+7. Run the following command to check if all of the Kubernetes Addons and Applications deployed successfully
+
+   ```bash
+   flux get all -A
+   ```
+
 ## Managing Flux
 
 Managing Flux is handled by using the Flux CLI. Flux does not come with any Web or UI interface to manage Flux. Please click [here](https://fluxcd.io/flux/cmd/) if you would like more information on the Flux CLI.
@@ -335,69 +306,215 @@ flux suspend kustomization <kustomization_name>
 flux reconcile source git flux-system
 ```
 
-In the section [Configure and Install Flux](#configure-and-install-flux), we configured and installed Flux. Once Flux was up and running, Flux began to reconcile the Git repository we specified, which installed and configured all of the defined Kubernetes Addons and Applications.
+For additional information on using Flux, please look at the following series I wrote about Flux.
+
+- [Using Flux, a GitOps Tool, with Amazon Elastic Kubernetes Service (EKS) - Part 1](https://www.linkedin.com/pulse/using-flux-gitops-tool-amazon-elastic-kubernetes-service-rasmuson)
+- [Using Flux, a GitOps Tool, with Amazon Elastic Kubernetes Service (EKS) - Part 2](https://www.linkedin.com/pulse/using-flux-gitops-tool-amazon-elastic-kubernetes-service-rasmuson-1c)
+- [Using Flux, a GitOps Tool, with Amazon Elastic Kubernetes Service (EKS) - Part 3](https://www.linkedin.com/pulse/using-flux-gitops-tool-amazon-elastic-kubernetes-service-rasmuson-1f)
 
 ## Kubernetes Addons managed by Flux
 
-Before the Applications that Flux manages, the Kubernetes Addons will be deployed and configured by Flux first. The following Kubernetes Addons will be installed.
+Below are the Applications that Flux manages, the Kubernetes Addons will be deployed and configured by Flux first. The following Kubernetes Addons will be installed.
 
-* AWS Application Load Balancer Controller
-* External DNS
-* Cluster Autoscaler
-* Cert manager
-* Metrics Server
+- AWS Application Load Balancer Controller
+- External DNS
+- Cluster Autoscaler
+- Cert manager
+- Metrics Server
 
 The AWS Application Load Balancer Controller and External DNS must be deployed first because the Applications need to be accessible by a load balancer and have the DNS Name registered with Route 53.
 
-## Istio and Istio Addons managed by Flux
-
-* [Istio](https://istio.io/) -
-  * [Istiod](https://istio.io/latest/docs/ops/deployment/architecture/#istiod) - Provides service discovery, configuration, and certificate management
-  * [Istio Ingress Gateway](https://istio.io/latest/docs/setup/additional-setup/gateway/)
-* [Kiali](https://kiali.io/) - Console for Istio Service Mesh
-* [Kube Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
-  * [Prometheus](https://prometheus.io/)
-  * [Grafana](https://grafana.com/oss/)
-* [Grafana Loki](https://grafana.com/oss/loki/)
-
 ## Applications managed by Flux
 
-Flux can manage applications in several ways, but the most common way is through the Helm Controller. Flux will manage three Applications using Helm charts to deploy to the Amazon EKS Cluster. The three Applications are the following.
+Flux manages the following applications. These applications will be used to demonstrate the various Istio features.
 
-* [Bookinfo](https://istio.io/latest/docs/examples/bookinfo/) - Application used to demostrate various Istio features.
-* [Podinfo](https://github.com/stefanprodan/podinfo) - A tiny web application made with Go
+- [Bookinfo](https://istio.io/latest/docs/examples/bookinfo/) - A sample application composed of four separate microservices
+- [Podinfo](https://github.com/stefanprodan/podinfo) - A tiny web application made with Go
+
+## Istio and Istio Addons managed by Flux
+
+Istio is comprised of the following three components.
+
+- [Istio](https://istio.io/) - An open-source service mesh that provides a uniform way to connect, manage, and secure microservices, enabling traffic flow control, policy enforcement, and telemetry data aggregation without altering service code.
+- [Istiod](https://istio.io/latest/docs/ops/deployment/architecture/#istiod) - Consolidated control plane daemon of the Istio service mesh, responsible for service discovery, configuration management, certificate issuance, and providing overall operational control.
+- [Istio Ingress Gateway](https://istio.io/latest/docs/setup/additional-setup/gateway/) - A dedicated network gateway in the Istio service mesh architecture that manages incoming traffic routing to various services within the mesh.
+
+The following components are not necessary to run Istio but are addons to help the observability features of Istio.
+
+- [Kiali](https://kiali.io/) - An open-source observability platform tailored for service mesh deployments, providing insights into the performance and structure of microservices networks within Istio. Kiali will retrieve data from Prometheus, Grafana, and Jaeger if installed and configured correctly.
+- [Jaeger](https://www.jaegertracing.io/) - Distributed Tracing platform - An open-source, end-to-end distributed tracing system that helps monitor and troubleshoot transactions in complex, microservice-based architectures.
+- [Kube Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+  - [Prometheus](https://prometheus.io/) - An open-source monitoring system with a dimensional data model, flexible query language, and powerful alerting functionality for storing and querying time-series data.
+  - [Grafana](https://grafana.com/oss/) - An open-source analytics and monitoring platform designed for visualizing and exploring metrics from various databases and time-series data.
+- [Grafana Loki](https://grafana.com/oss/loki/) - A horizontally scalable, multi-tenant log aggregation system inspired by Prometheus, designed for cost-effective storage and querying of logs at scale.
 
 ## Access Applications managed by Flux
 
 Let's access the Applications managed by Flux. Retrieve the ***public_base_domain_name*** specified in the "locals.tf" when you ran Terraform earlier.
 
-For the Bookinfo App, you can access the Bookinfo URL "bookinfo.<public_base_domain_name>" in your favorite web browser.
-![Bookinfo](./images/podinfo.png)
+### Access Bookinfo App
 
-For the Podinfo App, you can access the Podinfo URL "podinfo.<public_base_domain_name>" in your favorite web browser.
+For the Bookinfo App, you can access the Bookinfo URL "https://bookinfo.<public_base_domain_name>/productpage" in your favorite web browser.
+![Bookinfo](./images/bookinfo.png)
+
+### Access Podinfo App
+
+For the Podinfo App, you can access the Podinfo URL "https://podinfo.<public_base_domain_name>" in your favorite web browser.
 ![Podinfo](./images/podinfo.png)
 
-The default user name and password for Weave GitOps are the following
+## Access Istio Addons
 
-* Username: admin
-* Password: Flux&Git0ps
+Let's access the Istio Addons before we demonstrate how Istio works. Retrieve the ***public_base_domain_name*** specified in the "locals.tf" when you ran Terraform earlier.
 
-## Demonstrate how Flux works
+### Access Kiali Dashboard
 
-To demonstrate how Flux works, we will be using the Flux CLI.
+To access the Kiali Dashboard, follow these steps.
 
-## Check the Status of Flux
+1. Access the Kiali URL "https://kiali.<public_base_domain_name>" in your favorite web browser.
 
-Let's check the status of all resources managed by Flux by running the following command.
+   ![Kiali Login](./images/kiali_login.png)
 
-```bash
-flux get all -A
-```
+2. Generate and retrieve **token** by running the following command
 
-Result of running the above command.
-![Flux Get All](./images/flux_get_all.png)
+   ```bash
+   kubectl -n istio-system create token kiali-service-account
+   ```
 
-## Reconcile Helm Release with Flux
+   ![Kiali Token](./images/kiali_sa_token.png)
+
+3. Copy and paste the generated token from above to the Kiali Login page.
+
+   ![Kiali Login with Token](./images/kiali_login_with_token.png)
+
+4. Log into the Kiali Dashboard.
+
+   ![Kiali Overview Dashboard after login](./images/kiali_overview_after_login.png)
+
+### Access Grafana Dashboard
+
+To access the Grafana Dashboard, follow these steps.
+
+1. Access the Kiali URL "https://grafana.<public_base_domain_name>" in your favorite web browser.
+
+   ![Grafana Login](./images/grafana_login.png)
+
+2. Log into Grafana with the following username and password.
+
+   - Username: admin
+   - Password: Grafana&Git0ps
+
+   ![Grafana After Login](./images/grafana_after_login.png)
+
+## Demonstrate how Istio works
+
+Now that we know how to access the Applications let's demonstrate how Istio works. We will send several requests to the Bookinfo and Podinfo applications by running curl commands from the terminals or shells. We will do this to simulate enough traffic for Istio and the Istio Addons to capture the network traffic so the dashboards in Kiali and Grafana can display correctly.
+
+## Populate Data for Kiali and Istio Dashboards in Grafana
+
+1. Retrieve the ***public_base_domain_name*** specified in the "locals.tf" when you ran Terraform earlier.
+
+2. Open two separate terminals or shells.
+
+   **NOTE**: Run these commands as often as you want to populate the data in Kiali and Grafana.
+
+3. Run the following command in the first terminal or shell to send traffic to the Bookinfo application. Replace <public_base_domain_name> with the actual domain name.
+
+   ```bash
+   for i in {1..720}; do curl -s -o /dev/null "https://bookinfo.<public_base_domain_name>/productpage" ; done
+
+   ```
+
+4. In the second terminal or shell, run the following command to send traffic to the Podinfo application. Replace <public_base_domain_name> with the actual domain name.
+
+   ```bash
+   for i in {1..720}; do curl -s -o /dev/null "https://podinfo.<public_base_domain_name>" ; done
+   ```
+
+It will take 4 to 5 minutes for the above commands to finish.
+
+## Access and Review Data in Kiali Dashboard
+
+While the commands above run, re-access the Kiali Dashboard and review the data.
+
+1. Let's change the time range to the last 10 minutes by clicking in the upper right corner of the web page. Click on "Last 1m" to "Last 10m"..
+
+   ![Kiali change to Last 5m](./images/kiali_change_to_last_10m.png)
+
+2. Click on "Graph" on the left side of the Kiali Dashboard.
+
+   ![Kiali change to Graph](./images/kiali_change_to_graph.png)
+
+3. Click on "Select Namespaces" and choose "bookinfo".
+
+   ![Kiali Graph Select NS](./images/kiali_graph_select_ns.png)
+
+   ![Kiali Graph Select Bookinfo](./images/kiali_graph_select_bookinfo.png)
+
+4. Click anywhere on the Kiali Dashboard, and you should see something similar.
+
+   ![Kiali Graph Bookinfo](./images/kiali_graph_bookinfo.png)
+
+5. Click on "Display" and select "Response Time" and "Security".
+
+   ![Kiali Graph Bookinfo Change Display](./images/kiali_graph_bookinfo_display.png)
+
+6. Click anywhere on the Kiali Dashboard again, and you should see the response times and a little green lock on each connection.
+
+   ![Kiali Graph Bookinfo Display Security](./images/kiali_graph_bookinfo_security.png)
+
+7. Click on "productpage v1" on the Kiali Graph Dashboard, and you should see something like this. It will display information on the right-hand side of the Dashboard, such as Traffic and Traces.
+
+   ![Kiali Graph Bookinfo Productpage V1](./images/kiali_graph_bookinfo_productpagev1.png)
+
+8. Let's add the podinfo namespace to the Kiali Graph Dashboard. Click Namespace again and then podinfo. After selecting, you should see something like this.
+
+   ![Kiali Graph Bookinfo Podinfo](./images/kiali_graph_bookinfo_podinfo.png)
+
+9. Feel free to explore other parts of the Kiali Dashboard. The Kiali Dashboard pulls its data from Prometheus, Grafana, and Jaeger.
+
+## Access Istio Dashboards in Grafana
+
+Let's re-access the Grafana Dashboards for Istio and review the data. For details on what each Istio Dashboard does, click [here](https://istio.io/latest/docs/tasks/observability/metrics/using-istio-dashboard/).
+
+**NOTE**: If the data is not showing in the Grafana Dashboards for Istio, re-run the commands from above to populate data for Bookinfo and Podinfo again.
+
+1. Change to the Istio Dashboards in Grafana by clicking on Home in the upper left of the Grafana home page
+
+   ![Grafana Home Button](./images/grafana_home_button.png)
+
+2. Click on Dashboards
+
+   ![Grafana Dashboards Button](./images/grafana_dashboard_button.png)
+
+3. Hover over Istio and then click "Go to folder".
+
+   ![Grafana Dashboards Button](./images/grafana_dashboard_istio_hover.png)
+
+4. Istio Dashboards should now appear.
+
+   ![Istio Dashboards Folder](./images/grafana_istio_dashboards.png)
+
+5. Click on Istio Mesh Dashboard In Grafana. This dashboard provides a global view of all services and applications used in the Service Mesh.
+
+   ![Istio Mesh Dashboard](./images/grafana_istio_mesh_dashboard.png)
+
+6. Let's navigate to the Istio Service Dashboard by clicking on Istio in the upper left-right next to "Home > Dashboards > Istio" and then click "Istio Service Dashboard".
+
+   ![Istio Mesh Dashboard Istio Folder](./images/grafana_istio_mesh_dashboard_to_istio_folder.png)
+
+   ![Istio Folder Istio Service Dashboard](./images/grafana_istio_folder_service_dashboard.png)
+
+   ![Istio Service Dashboard](./images/grafana_istio_service_dashboard.png)
+
+7. Click on service on the Istio Service Dashboard and change to "productpage.bookinfo.svc.cluster.local" service and then expand General, Client Workloads, and Service Workloads sections.
+
+   ![Istio Service Dashboard Product Page](./images/grafana_istio_service_dashboard_productpage.png)
+
+8. Review the General, Client Workloads, and Service Workloads sections. In the Client Workloads and Service Workloads sections, you can see that mutual TLS (mTLS) is enabled and working correctly.
+
+   ![Istio Service Dashboard Client Workloads](./images/grafana_istio_service_dashboard_client_workloads.png)
+
+9. Feel free to explore other parts of the Istio Dashboards in Grafana.
 
 ## Clean Up
 
@@ -414,14 +531,14 @@ Result of running the above command.
 2. Delete Applications managed by Flux
 
    ```bash
-   flux delete helmrelease -s podinfo
-   flux delete helmrelease -s -n monitoring loki-stack
-   flux delete helmrelease -s -n monitoring kube-prometheus-stack
-   kubectl delete -f ./k8s/apps/base/bookinfo/release.yaml
    kubectl delete -f ./k8s/apps/base/bookinfo/config.yaml
    kubectl delete -f ./k8s/apps/base/bookinfo/cert_request.yaml
    kubectl delete -f ./k8s/apps/base/podinfo/config.yaml
    kubectl delete -f ./k8s/apps/base/podinfo/cert_request.yaml
+   kubectl delete -f ./k8s/apps/base/bookinfo/release.yaml
+   flux delete helmrelease -s podinfo
+   flux delete helmrelease -s -n monitoring loki-stack
+   flux delete helmrelease -s -n monitoring kube-prometheus-stack
    ```
 
 3. Wait 1 to 5 minutes for Applications to be removed from Kubernetes
@@ -444,44 +561,70 @@ Result of running the above command.
    kubectl -n monitoring get all
    ```
 
-## Clean up Kubernetes Addons managed by Flux from Kubernetes
+## Clean up Infrastructure Applications managed by Flux from Kubernetes
 
-1. Suspend and Delete Kubernetes Addons managed by Flux
+1. Suspend Infrastructure Applications managed by Flux
 
    ```bash
-   flux suspend kustomization infra-apps infra-configs infra-controllers
-   flux suspend helmrelease aws-load-balancer-controller
-   flux suspend helmrelease cert-manager
-   flux suspend helmrelease cluster-autoscaler
-   flux suspend helmrelease external-dns
-   flux suspend helmrelease kiali
-   flux suspend helmrelease jaeger-operator
-   flux suspend helmrelease istio-base
-   flux suspend helmrelease istiod
-   flux suspend helmrelease istio-ingressgateway
+   flux suspend kustomization infra-apps
+   ```
+
+2. Delete Infrastructure Applications managed by Flux
+
+   ```bash
+   kubectl delete -f ./k8s/infrastructure/apps/kiali/config.yaml --force=true --grace-period=0
+   kubectl delete -f ./k8s/infrastructure/apps/kiali/cert_request.yaml
    kubectl patch kiali kiali -n istio-system -p '{"metadata":{"finalizers": []}}' --type=merge
    kubectl delete kiali --all --all-namespaces
    kubectl delete jaegers.jaegertracing.io -n observability jaeger
+   flux delete helmrelease -s kiali
+   flux delete helmrelease -s jaeger-operator
+   kubectl delete crd kialis.kiali.io
+   ```
+
+3. Wait 1 to 5 minutes for Kubernetes Addons to be removed from Kubernetes
+
+4. Delete Application sources managed by Flux
+
+   ```bash
+   flux delete source helm -s jaegertracing
+   flux delete source helm -s kiali
+   ```
+
+5. Verify Kubernetes Addons were removed successfully
+
+   ```bash
+   kubectl -n kiali-operator get all
+   kubectl -n observability get all
+   kubectl -n istio-ingress get ingresses kiali-ingress
+   ```
+
+6. If any resources are not deleted, manually delete them.
+
+## Clean up Kubernetes Addons managed by Flux from Kubernetes
+
+1. Suspend Kubernetes Addons managed by Flux
+
+   ```bash
+   flux suspend kustomization infra-configs infra-controllers
+   ```
+
+2. Delete Kubernetes Addons managed by Flux
+
+   ```bash
    flux delete helmrelease -s aws-load-balancer-controller
    flux delete helmrelease -s cert-manager
    flux delete helmrelease -s cluster-autoscaler
    flux delete helmrelease -s external-dns
-   flux delete helmrelease -s kiali
-   flux delete helmrelease -s jaeger-operator
    flux delete helmrelease -s istio-base
    flux delete helmrelease -s istiod
    flux delete helmrelease -s istio-ingressgateway
-   kubectl delete -f ./k8s/infrastructure/apps/kiali/config.yaml --force=true --grace-period=0
-   kubectl delete -f ./k8s/infrastructure/apps/kiali/cert_request.yaml
-   kubectl delete crd kialis.kiali.io
-   kubectl delete -n observability deployment jaeger-operator
-   kubectl delete -n observability service jaeger-operator-metrics
-   kubectl delete -n observability service jaeger-operator-webhook-service
+   flux delete helmrelease -s metrics-server
    ```
 
-2. Wait 1 to 5 minutes for Applications to be removed from Kubernetes
+3. Wait 1 to 5 minutes for Kubernetes Addons to be removed from Kubernetes
 
-3. Delete Application sources managed by Flux
+4. Delete Application sources managed by Flux
 
    ```bash
    flux delete source helm -s cert-manager
@@ -489,28 +632,24 @@ Result of running the above command.
    flux delete source helm -s eks-charts
    flux delete source helm -s external-dns
    flux delete source helm -s istio
-   flux delete source helm -s jaegertracing
    flux delete source helm -s jetstack
-   flux delete source helm -s kiali
    flux delete source helm -s metrics-server
    ```
 
-4. Verify Kubernetes Addons were removed successfully
+5. Verify Kubernetes Addons were removed successfully
 
    ```bash
    kubectl -n kube-system get all -l app.kubernetes.io/name=external-dns
    kubectl -n kube-system get all -l app.kubernetes.io/name=aws-load-balancer-controller
    kubectl -n kube-system get all -l app.kubernetes.io/name=aws-cluster-autoscaler
    kubectl -n cert-manager get all
-   kubectl -n kiali-operator get all
    kubectl -n istio-ingress get ingresses kiali-ingress
    kubectl -n istio-ingress get all
    kubectl -n istio-system get all
-   kubectl -n observability get all
-   kubectl get ingressclasses -A
+   kubectl get ingressclasses -l app.kubernetes.io/name=aws-load-balancer-controller
    ```
 
-5. If any resources are not deleted, manually delete them.
+6. If any resources are not deleted, manually delete them.
 
 ## Uninstall Flux from Kubernetes
 
@@ -542,4 +681,4 @@ Result of running the above command.
 
 ## Conclusion
 
-In conclusion, this guide provided a comprehensive overview of utilizing Amazon EKS and Flux to implement the GitOps methodology for deploying and managing applications and infrastructure. GitOps, a DevOps approach, leverages version control and collaboration principles from Git to streamline application deployment and infrastructure management. Flux, an open-source tool, automates application deployments, infrastructure deployments, and lifecycle management in Kubernetes clusters.
+In conclusion, this guide provided a comprehensive overview of utilizing Istio, a service mesh, and Amazon EKS. A service mesh is an essential infrastructure component that enhances communication and operational capabilities within a microservices architecture. Istio, as a leading service mesh implementation, provides a robust set of features for traffic management, security, and observability without heavy lifting from developers. Istio works seamlessly with Amazon EKS, as EKS supports Kubernetes natively, and Istio is designed to work with Kubernetes-managed services. Users can leverage Istio within EKS to manage microservices traffic, enforce security policies, and observe communication patterns between services, all while taking advantage of the managed Kubernetes environment that EKS provides. This combination allows for a powerful, scalable, and secure system for managing microservices at scale.
