@@ -38,7 +38,7 @@
 
 ## Introduction
 
-Have you ever wondered if there was a better way to manage, monitor, or secure your distributed microservices without adding these to your own code? Well, there is a way. It is called a Service Mesh.
+Have you ever wondered if there was a better way to manage, monitor, or secure your distributed microservices without adding extra modules to your own code? Well, there is a way. It is called a Service Mesh.
 
 This is the first part of the series on Using Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS). This guide will explain what Service Mesh and Istio are and show you how to use Istio, a Service Mesh, with Amazon Elastic Kubernetes Service (EKS). You will use Flux to deploy various Kubernetes Services and Applications, including Istio, and supporting applications and microservices to Amazon Elastic Kubernetes Service (EKS).
 
@@ -361,14 +361,14 @@ As part of the Bookinfo and Podinfo installation managed by Flux, the Kubernetes
 
 In the Bookinfo namespace.yaml file. As you can see, when this namespace is created, the label "istio-injection=enabled" is added.
 
-'''yaml
+```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: bookinfo
   labels:
     istio-injection: enabled
-'''
+```
 
 Let's review which Kubernetes namespaces have the label "istio-injection=enabled".
 
@@ -610,7 +610,7 @@ While the commands above run, re-access the Kiali Dashboard and review the data.
 
 1. Let's change the time range to the last 10 minutes by clicking in the upper right corner of the web page. Click on "Last 1m" to "Last 10m"..
 
-   ![Kiali change to Last 5m](./images/kiali_change_to_last_10m.png)
+   ![Kiali change to Last 10m](./images/kiali_change_to_last_10m.png)
 
 2. Click on "Graph" on the left side of the Kiali Dashboard.
 
@@ -660,7 +660,7 @@ Let's re-access the Grafana Dashboards for Istio and review the data. For detail
 
 3. Hover over Istio and then click "Go to folder".
 
-   ![Grafana Dashboards Button](./images/grafana_dashboard_istio_hover.png)
+   ![Grafana Dashboards Istio Hover](./images/grafana_dashboard_istio_hover.png)
 
 4. Istio Dashboards should now appear.
 
